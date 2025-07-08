@@ -96,4 +96,52 @@ class ProductSubCategory(models.Model):
     def __str__(self):
         return self.sub_cat_name
     
+    def save(self, *args, **kwargs):
+        if not self.sub_cat_slug and self.sub_cat_name:
+            base_slug = slugify(self.sub_cat_name)
+            slug = base_slug
+            num = 1
+            while ProductSubCategory.objects.filter(sub_cat_slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{num}"
+                num += 1
+            self.sub_cat_slug = slug
+        super().save(*args, **kwargs)
+    
+class Product(models.Model):
+    product_name = models.CharField(max_length=100, unique=True)
+    product_slug = models.SlugField(max_length=150, unique=True, blank=True)
+    product_image = models.ImageField(upload_to='ecommerce/product_images/', blank=True, null=True)
+    main_category = models.ForeignKey(ProductMainCategory, on_delete=models.CASCADE, related_name='products')
+    sub_category = models.ForeignKey(ProductSubCategory, on_delete=models.CASCADE, related_name='products', blank=True, null=True)
+    price = models.DecimalField(max_digits=10, decimal_places=2)
+    stock = models.PositiveIntegerField(default=0)
+    is_featured = models.BooleanField(default=False)
+    total_views = models.PositiveIntegerField(default=0)
+    discount_percentage = models.PositiveIntegerField(default=0, blank=True, null=True)
+    discount_price = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
 
+    description = models.TextField(blank=True, null=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='product_created_by')
+    updated_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='product_updated_by', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now_add=False, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = 'products'
+        verbose_name_plural = 'Products'
+        ordering = ['-is_active']
+
+    def __str__(self):
+        return self.product_name
+
+    def save(self, *args, **kwargs):
+        if not self.product_slug and self.product_name:
+            base_slug = slugify(self.product_name)
+            slug = base_slug
+            num = 1
+            while Product.objects.filter(product_slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{num}"
+                num += 1
+            self.product_slug = slug
+        super().save(*args, **kwargs)

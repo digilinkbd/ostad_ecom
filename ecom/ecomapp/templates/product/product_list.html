@@ -19,7 +19,7 @@
                     </div>
                     <div class="top-button">
                         <div class="button-box">
-                            <a class="button primary-button" href="{% url 'create_new_product' %}"><span><img src="/static/images/icons/add.svg" alt="more"></span> Add New Product</a>
+                            <a class="button primary-button" href="{% url 'add_new_product' %}"><span><img src="/static/images/icons/add.svg" alt="more"></span> Add New Product</a>
                         </div>
                     </div>
                 </div>
@@ -40,6 +40,7 @@
                                 <th class="text-center">Image</th>
                                 <th class="text-left">Name</th>
                                 <th class="text-left">Main Category</th>
+                                <th class="text-left">Sub Category</th>
                                 
                                 <th class="text-left">Price</th>
                                 <th class="text-left">Total View</th>
@@ -48,11 +49,11 @@
                                 <th class="text-center">Action</th>
                             </tr>
                           
-                        {% comment %} {% for data in products %}
+                        {% for data in products %}
                             <tr>
                                 <td class="text-center">{{ forloop.counter }}</td>
                                 <td class="text-center">
-                                    <span><a href="{% url 'product_related_image' data.id %}">
+                                    <span><a href="">
                                         {% if data.product_image and data.product_image.url %}
                                             <img src="{{ data.product_image.url }}" alt="user image" style="width: 50px; height: 50px;">
                                         {% else %}
@@ -65,6 +66,7 @@
                                 </td>
                                 
                                 <td class="text-left">{{ data.main_category.main_cat_name }}</td>
+                                <td class="text-left">{{ data.sub_category.sub_cat_name }}</td>
                                 <td class="text-left">{{ data.price }}</td>
                                 <td class="text-left">{{ data.total_views }}</td>
                                 <td class="text-left">{{ data.created_at|date:"d-M-Y" }}</td>
@@ -75,7 +77,7 @@
                                         <span class="inactive"><img src="/static/images/icons/ellipse-inactive.svg" alt="inactive"></span>Inactive
                                     {% endif %}
                                 </td>
-                                  <td class="text-center">
+                                   <td class="text-center">
                                     <span class="more">
                                         <a href="{% url 'product_detail' data.id %}">
                                             <i class="fas fa-eye font-weight500"></i>
@@ -86,13 +88,13 @@
                                             <i class="fas fa-edit font-weight500"></i>
                                         </a>
                                     </span>
-                                </td>
+                                </td> 
                             </tr>
                         {% empty %}
                             <tr>
                                 <td colspan="8" class="text-center">No Data found.</td>
                             </tr>
-                        {% endfor %} {% endcomment %}
+                        {% endfor %}
                         </table>
                     </div>
 

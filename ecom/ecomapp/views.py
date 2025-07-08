@@ -11,7 +11,7 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.contrib import messages
 from ecomapp.common_func import checkUserPermission
 from ecomapp.models import (
-     MenuList,ProductMainCategory
+     MenuList,ProductMainCategory,Product,ProductSubCategory
    
 )
 
@@ -112,3 +112,127 @@ def product_main_category_details(request, pk):
     }
     return render(request, 'product/product_main_category_details.html', context)
 
+@login_required
+def product_list(request):
+    if not checkUserPermission(request, "can_view", "backend/product-list/"):
+        return render(request,"403.html")
+
+    products = Product.objects.filter(is_active=True).order_by('-id')
+    page_number = request.GET.get('page', 1)
+    products, paginator_list, last_page_number = paginate_data(request, page_number, products)
+
+    context = {
+        'paginator_list': paginator_list,
+        'last_page_number': last_page_number,
+        'products': products,
+    }
+
+    return render(request, "product/product_list.html", context)
+
+@login_required
+def product_detail(request, pk):
+    if not checkUserPermission(request, "can_view", "backend/product-list/"):
+        return render(request,"403.html")
+
+    product = get_object_or_404(Product, pk=pk)
+    
+    context = {
+        'product': product,
+    }
+    return render(request, 'product/product_detail.html', context)
+
+@login_required
+def product_edit(request, pk):
+    if not checkUserPermission(request, "can_update", "backend/product-list/"):
+        return render(request,"403.html")
+
+    product = get_object_or_404(Product, pk=pk)
+
+    if request.method == 'POST':
+        product.product_name = request.POST.get('product_name')
+        product.price = request.POST.get('price')
+        product.stock = request.POST.get('stock')
+        product.description = request.POST.get('description')
+        product.discount_percentage = request.POST.get('discount_percentage')
+        product.main_category = get_object_or_404(ProductMainCategory, pk=request.POST.get('main_category'))
+        product.sub_category = get_object_or_404(ProductSubCategory, pk=request.POST.get('sub_category'))
+        product.updated_by = request.user
+        product.save()
+        
+        messages.success(request, 'Product updated successfully.')
+        return redirect('product_list')
+    main_categories = ProductMainCategory.objects.filter(is_active=True)
+    sub_categories = ProductSubCategory.objects.filter(is_active=True)
+    context = {
+        'product': product,
+        'main_categories': main_categories,
+        'sub_categories': sub_categories,
+    }
+    return render(request, 'product/product_edit.html', context)
+
+@login_required
+def add_new_product(request):
+    if not checkUserPermission(request, "can_add", "backend/product-list/"):
+        return render(request,"403.html")
+
+    if request.method == 'POST':
+        product_name = request.POST.get('product_name')
+        price = request.POST.get('price')
+        stock = request.POST.get('stock')
+        discount_price = request.POST.get('discount_price')
+        discount_percentage = request.POST.get('discount_percentage')
+        description = request.POST.get('description')
+        main_category_id = request.POST.get('main_category')
+        sub_category_id = request.POST.get('sub_category')
+        image = request.FILES.get('product_image')
+
+        if not main_category_id or not sub_category_id or not product_name or not price or not stock:
+            messages.error(request, 'All fields are required.')
+            return redirect('add_new_product')
+        main_category=ProductMainCategory.objects.filter(id=main_category_id, is_active=True).first()
+
+        if not main_category:
+            messages.error(request, 'Invalid main category selected.')
+            return redirect('add_new_product')
+        
+        sub_category=ProductSubCategory.objects.filter(id=sub_category_id, is_active=True).first()
+
+        if not sub_category:
+            messages.error(request, 'Invalid Sub category selected.')
+            return redirect('add_new_product')
+
+        product = Product(
+            product_name=product_name,
+            product_image=image,
+            price=price,
+            stock=stock,
+            discount_price=discount_price,
+            discount_percentage=discount_percentage,
+            description=description,
+            main_category=main_category,
+            sub_category=sub_category,
+            created_by=request.user
+        )
+        product.save()
+        
+        messages.success(request, 'Product added successfully.')
+        return redirect('product_list')
+
+    main_categories= ProductMainCategory.objects.filter(is_active=True)
+    sub_categories = ProductSubCategory.objects.filter(is_active=True)
+    context = {
+        'main_categories': main_categories,
+        'sub_categories': sub_categories,
+    }
+    return render(request, 'product/add_new_product.html',context)
+
+def home(request):
+
+    main_categories= ProductMainCategory.objects.filter(is_active=True)
+
+    context = {
+        'main_categories': main_categories,
+        
+    }
+
+    return render(request, 'website/home.html',context)
