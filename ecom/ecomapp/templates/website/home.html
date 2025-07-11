@@ -1,133 +1,79 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ShopHub - Your Ultimate Shopping Destination</title>
-    <link rel="stylesheet" href="/static/website/css/styles.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-</head>
-<body>
-    <!-- Header -->
-    <header class="header">
-        <nav class="navbar">
-            <div class="nav-container">
-                <div class="nav-logo">
-                    <h2>ShopHub</h2>
-                </div>
-                <ul class="nav-menu">
-                    <li><a href="#home">Home</a></li>
-                    <li><a href="#products">Products</a></li>
-                    <li><a href="#categories">Categories</a></li>
-                    <li><a href="#about">About</a></li>
-                    <li><a href="#contact">Contact</a></li>
-                </ul>
-                <div class="nav-icons">
-                    <button class="search-btn">🔍</button>
-                    <button class="cart-btn">🛒 <span class="cart-count">0</span></button>
-                    <button class="user-btn">👤</button>
-                </div>
-                <div class="hamburger">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-            </div>
-        </nav>
-    </header>
 
-    <!-- Hero Section -->
-    <section id="home" class="hero">
-        <div class="hero-container">
-            <div class="hero-content">
-                <h1 class="hero-title">Discover Amazing Products</h1>
-                <p class="hero-subtitle">Shop the latest trends and find everything you need in one place</p>
-                <div class="hero-buttons">
-                    <button class="btn btn-primary">Shop Now</button>
-                    <button class="btn btn-secondary">Learn More</button>
-                </div>
-            </div>
-            <div class="hero-image">
-                <img src="/placeholder.svg?height=400&width=600" alt="Shopping Hero Image">
-            </div>
-        </div>
-    </section>
+{% extends 'web_base.html' %}
 
-    <!-- Top Categories -->
-    <section id="categories" class="categories">
-        <div class="container">
-            <h2 class="section-title">Top Categories</h2>
+{% block title %} Fico {% endblock %}
 
-            
-            <div class="categories-grid">
-                {% for data in main_categories %}
-                <div class="category-card" data-category="electronics">
-                    <div class="category-icon">📱</div>
-                    <h3>{{data.main_cat_name}}</h3>
-                    <p>{{data.description}}</p>
-                </div>
-                
-               {% endfor %}
-            </div>
-            
-        </div>
-    </section>
+{% load static %}
 
-    <!-- Featured Products -->
-    <section id="products" class="featured-products">
-        <div class="container">
-            <h2 class="section-title">Featured Products</h2>
-            <div class="products-grid" id="products-grid">
-                <!-- Products will be loaded dynamically -->
-            </div>
-            <div class="load-more">
-                <button class="btn btn-outline" id="load-more-btn">Load More Products</button>
-            </div>
-        </div>
-    </section>
+{% block linkcss %}
+<!--For Home-->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css" />
+<link rel="stylesheet" href="{% static 'website/css/home.css' %}" />
 
-    <!-- Footer -->
-    <footer class="footer">
-        <div class="container">
-            <div class="footer-content">
-                <div class="footer-section">
-                    <h3>ShopHub</h3>
-                    <p>Your ultimate shopping destination for quality products at great prices.</p>
-                </div>
-                <div class="footer-section">
-                    <h4>Quick Links</h4>
-                    <ul>
-                        <li><a href="#home">Home</a></li>
-                        <li><a href="#products">Products</a></li>
-                        <li><a href="#categories">Categories</a></li>
-                        <li><a href="#about">About</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Customer Service</h4>
-                    <ul>
-                        <li><a href="#">Contact Us</a></li>
-                        <li><a href="#">Shipping Info</a></li>
-                        <li><a href="#">Returns</a></li>
-                        <li><a href="#">FAQ</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>Follow Us</h4>
-                    <div class="social-links">
-                        <a href="#">📘</a>
-                        <a href="#">📷</a>
-                        <a href="#">🐦</a>
-                        <a href="#">💼</a>
+{% endblock %}
+
+
+{% block content %}
+<section class="artical hero-section" style="background-color: rgba(255, 255, 0, .2);">
+    <div class="hero-container">
+        <div class="banner-box">
+            <div class="swiper banner-swiper">
+                <div class="swiper-wrapper">
+                    <div class="swiper-slide">
+                        <a href="{% url 'product_list' %}">
+                            <img class="desktop" src="{% static 'website/images/banner/banner-web.png' %}" alt="Fico">
+                            <img class="mobile" src="{% static 'website/images/banner/banner-mobile.png' %}" alt="Fico">
+                        </a>
                     </div>
                 </div>
-            </div>
-            <div class="footer-bottom">
-                <p>&copy; 2024 ShopHub. All rights reserved.</p>
+                <div class="swiper-button-next"></div>
+                <div class="swiper-button-prev"></div>
+                <div class="swiper-pagination"></div>
             </div>
         </div>
-    </footer>
+    </div>
+</section>
 
-    <script src="script.js"></script>
-</body>
-</html>
+
+
+<section class="category-featured best-sellers discover_our_products">
+    <div class="container-fluid">
+        <div class="category-box">
+            <div class="best-sellers-text">
+                <h3 class="sub-title">Discover Our Products</h3>
+            </div>
+            <div class="category-list best-sellers-list">
+                {% for product in featured_products %}
+                    <div class="category-item">
+                        <a href="{% url 'products_details' product.product_slug %}" rel="noopener noreferrer">
+                            <img src="/media/{{ product.product_image }}" alt="{{ product.product_name }}">
+
+                        </a>
+                        <div class="item-text">
+                            <p><a href="{% url 'products_details' product.product_slug %}">{{ product.product_name }}</a></p>
+                            <p style="text-align: center;">{{ product.current_price.currency.currency_icon }} {{ product.current_price.sale_price }}</p>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block linkScript %}
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
+<script src="{% static 'js/event.js' %}"></script>
+
+<script>
+    var swiper = new Swiper(".newCollections", {
+        slidesPerView: "auto",
+        spaceBetween: 15,
+        autoplay: {
+            delay: 5500,
+            disableOnInteraction: false,
+        },
+    });
+</script>
+{% endblock %}

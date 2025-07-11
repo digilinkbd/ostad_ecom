@@ -145,3 +145,32 @@ class Product(models.Model):
                 num += 1
             self.product_slug = slug
         super().save(*args, **kwargs)
+
+class Customer(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    phone = models.CharField(max_length=15)
+    date_of_birth = models.DateField(null=True, blank=True)
+
+    def __str__(self):
+        return self.user.username
+    
+
+class OrderCart(models.Model):
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE,related_name='order_cart')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    quantity = models.PositiveIntegerField(default=1)
+    is_order= models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    @property
+    def total_amount(self):
+        return_value=float(self.quantity) * float(self.product.price)
+        return return_value
+    
+    class Meta:
+        db_table = 'order_cart'
+
+    def __str__(self):
+        return f"{self.customer} - {self.product.product_name} ({self.quantity})"

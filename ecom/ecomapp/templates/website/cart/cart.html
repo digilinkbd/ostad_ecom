@@ -1,0 +1,94 @@
+{% extends 'web_base.html' %}
+{% block title %} Fico {% endblock %}
+
+{% load static %}
+
+{% block linkcss %}
+<link rel="stylesheet" href="{% static 'css/cart.css' %}" />
+{% endblock %}
+
+{% block content %}
+
+<!-- CART PRODUCT Table-->
+<section class="cart-section">
+    <div class="container-fluid">
+        <div class="cart-wrap-box">
+            <div class="cartpage">
+                <div class="cart-box-item">
+                    <div class="cart-box-area" id="cart-box-area">
+                        <div class="cart-tab">
+                            <ul>
+                                <li><span class="active" href="#">1 Cart</span></li>
+                                <li><span>2 Details</span></li>
+                                <li><span>3 Shipping</span></li>
+                                <li><span>4 Payment</span></li>
+                            </ul>
+                        </div>
+                        <div class="cart-content">
+                            <div class="cart-item">
+                                <div class="cart-list">
+                                    <table class="table-box">
+                                        {% for cart in cart_items %}
+                                            <tr class="cart_item__{{ cart.product.id }}">
+                                                <td>
+                                                    <div class="cart-info-box">
+                                                        <div class="cart-product-image">
+                                                            {% if cart.product.product_image %}<img src="{{ cart.product.product_image.url }}" alt="{{ cart.product.product_name }}">{% endif %}
+                                                        </div>
+                                                        <div class="cart-text">
+                                                            <p><strong>{{ cart.product.product_name }}</strong></p>
+                                                            
+                                                            <div class="pocket-product-qty">
+                                                                <button type="button" id="decrement" class="decrement"><img src="{% static 'website/images/icons/minus.svg' %}" alt="-"></button>
+                                                                <input type="number" id="cart_qty" class="cart_qty cart_qty__{{ cart.product.id }}" min="0" max="50" data-product-id="{{ cart.product.id }}" value="{{ cart.quantity }}">
+                                                                <button type="button" id="increment" class="increment"><img src="{% static 'website/images/icons/plus.svg' %}" alt="+"></button>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </td>
+                                              
+                                            </tr>
+                                        {% endfor %}
+                                        
+
+                                        <tr class="cart-subtotal">
+                                            <td colspan="2">
+                                                <table style="width: 100%;">
+                                                    <tr>
+                                                        <td>Subtotal</td>
+                                                        <td class="text-right"><span class="sub_total_amount">{{ amount_summary.sub_total_amount|default:'0'|floatformat:2 }}</span></td>
+                                                        <td class="text-right"></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>VAT</td>
+                                                        <td class="text-right"> <span id="total_vat">{{ amount_summary.total_vat|default:'0'|floatformat:2 }}</td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td>Discount</td>
+                                                        <td class="text-right"><span id="total_discount">{{ amount_summary.total_discount|default:'0'|floatformat:2 }}</span></td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td><strong>Total</strong></td>
+                                                        <td class="text-right"><strong><span id="grand_total">{{ amount_summary.grand_total|default:'0'|floatformat:2 }}</span></strong></td>
+                                                        <td class="text-right"></td>
+                                                    </tr>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                       
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+{% endblock %}

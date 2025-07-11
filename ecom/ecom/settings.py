@@ -64,6 +64,8 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'ecomapp.context_processors.menu_items',
+                'ecomapp.context_processors.get_cart_item',
+
             ],
         },
     },
@@ -78,7 +80,7 @@ WSGI_APPLICATION = 'ecom.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
-        'NAME': 'ecom_service_live',
+        'NAME': 'live_ecom',
         'USER': 'root',
         'PASSWORD': '',
         'HOST': 'localhost',

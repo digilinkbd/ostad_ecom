@@ -14,6 +14,18 @@ urlpatterns = [
     path('product/edit/<int:pk>/', views.product_edit, name='edit_product'),
     path('product-list/', views.product_list, name='product_list'),
     path('product-create/', views.add_new_product, name='add_new_product'),
+    path('products/<slug:product_slug>/', views.products_details, name='products_details'),
    
    path('', views.home, name='home'),
+
+    # Authentication
+    path('login/', views.login_view, name='user_login'),
+    path('register/', views.register, name='register'),
+    path('logout/', views.user_logout, name='user_logout'),
+
+    #ajax
+
+    path('add-or-update-cart/', views.add_or_update_cart, name='add_or_update_cart'),
+
+    path('cart/', views.cart, name='cart_view'),
 ]

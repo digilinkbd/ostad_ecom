@@ -10,8 +10,9 @@ from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.contrib import messages
 from ecomapp.common_func import checkUserPermission
+from django.http import JsonResponse
 from ecomapp.models import (
-     MenuList,ProductMainCategory,Product,ProductSubCategory
+     MenuList,ProductMainCategory,Product,ProductSubCategory, Customer,OrderCart
    
 )
 
@@ -230,9 +231,163 @@ def home(request):
 
     main_categories= ProductMainCategory.objects.filter(is_active=True)
 
+    featured_products = Product.objects.filter(is_featured=True, is_active=True).order_by('-id')[:10]
+
     context = {
         'main_categories': main_categories,
+        'featured_products': featured_products,
         
     }
 
     return render(request, 'website/home.html',context)
+
+def login_view(request):
+    if request.method == 'POST':
+        phone = request.POST['phone']
+        password = request.POST['password']
+
+        
+        profile = Customer.objects.get(phone=phone)
+        user = authenticate(request, username=profile.user.username, password=password)
+        if user:
+            login(request, user)
+            messages.success(request, "Logged in successfully!")
+
+        next_url = request.GET.get('next')
+        if next_url:
+            next_url = next_url.strip()
+        else:
+            next_url = "home"
+        return redirect(next_url)
+            
+        
+
+    return render(request, 'website/user/login.html')
+
+def register(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        email = request.POST['email']
+        phone = request.POST['phone']
+        dob = request.POST['date_of_birth']
+        password = request.POST['password']
+
+        if User.objects.filter(username=username).exists():
+            return render(request, 'website/user/register.html', {'error': 'Username already taken'})
+        
+        user = User.objects.create_user(username=username, email=email, password=password)
+        Customer.objects.create(user=user, phone=phone, date_of_birth=dob)
+
+        messages.success(request, "Logged in successfully!")
+
+        next_url = request.GET.get('next')
+        if next_url:
+            next_url = next_url.strip()
+        else:
+            next_url = "home"
+
+        return redirect(next_url)
+
+    return render(request, 'website/user/register.html')
+
+@login_required
+def user_logout(request):
+    logout(request)
+    return redirect('home')
+
+
+def cart_amount_summary(request):
+
+    sub_total_amount = 0
+    total_vat = 0
+    total_discount = 0
+    grand_total = 0
+
+    if request.user.is_authenticated:
+        customer= Customer.objects.filter(user=request.user).first()
+        cart_items = OrderCart.objects.filter(customer=customer, is_active=True, is_order=False)
+        for item in cart_items:
+            sub_total_amount += item.total_amount
+            #total_vat += (item.product.price * 0.15)
+    grand_total = (sub_total_amount + total_vat) - total_discount 
+
+    return {'sub_total_amount': sub_total_amount, 'total_vat': total_vat, 'total_discount': total_discount, 'grand_total': grand_total}
+           
+            
+
+
+
+#Products Details
+
+def products_details(request, product_slug):
+
+    product = Product.objects.filter(product_slug=product_slug, is_active=True).first()
+
+    if not product:
+        messages.error(request, "Product not found.")
+        return redirect('home')
+    
+
+    context = {
+        'product': product,
+    }
+    return render(request, 'website/product/products_details.html', context)
+
+def add_or_update_cart(request):
+
+    
+    is_authenticated = request.user.is_authenticated
+    
+    
+    if is_authenticated:
+        if request.method == 'POST':
+            
+            customer=Customer.objects.filter(user=request.user).first()
+            
+            product_id = request.POST.get('product_id')
+            quantity = int(request.POST.get('quantity', 0))
+
+            try:
+                isRemoved = False
+
+                cart_item, created = OrderCart.objects.update_or_create(
+                    customer=customer, product_id=product_id, is_order=False, is_active=True,
+                    defaults={'quantity': quantity}
+                )
+                
+                if not created:
+                    if quantity <= 0:
+                        cart_item.is_active = False
+                        isRemoved = True
+
+                    cart_item.quantity = quantity
+                    cart_item.save()
+
+                amount_summary = cart_amount_summary(request)
+
+                cart_item_count = OrderCart.objects.filter(customer=customer, is_order=False, is_active=True).count()
+                print(f"Cart Item Count: {cart_item_count}")
+
+               
+
+                response = {
+                    'status': 'success',
+                    'message': 'Cart updated successfully',
+                    'is_authenticated': is_authenticated,
+                    'isRemoved': isRemoved,
+                    'item_price': cart_item.total_amount,
+                    'cart_item_count': cart_item_count,
+                    'amount_summary': amount_summary,
+                }
+                
+                return JsonResponse(response)
+            
+
+            except OrderCart.DoesNotExist:
+                return JsonResponse({'status': 'error', 'message': 'Cart item not found', 'is_authenticated': is_authenticated,})
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request', 'is_authenticated': is_authenticated,}, status=400)
+
+@login_required
+def cart(request):
+    return render(request, 'website/cart/cart.html')    
