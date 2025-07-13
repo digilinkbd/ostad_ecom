@@ -10,7 +10,7 @@ def menu_items(request):
 
 def get_cart_item(request):
 
-    print("Get Cart Item Context Processor Called")
+   
     if request.user.is_authenticated:
         try:
             customer= Customer.objects.filter(user=request.user).first()

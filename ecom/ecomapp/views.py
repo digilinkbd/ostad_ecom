@@ -12,9 +12,10 @@ from django.contrib import messages
 from ecomapp.common_func import checkUserPermission
 from django.http import JsonResponse
 from ecomapp.models import (
-     MenuList,ProductMainCategory,Product,ProductSubCategory, Customer,OrderCart
+     MenuList,ProductMainCategory,Product,ProductSubCategory, Customer,OrderCart,Order,OrderDetail
    
 )
+from django.db import transaction
 
 # Create your views here.
 # Create your views here.
@@ -327,6 +328,13 @@ def products_details(request, product_slug):
         messages.error(request, "Product not found.")
         return redirect('home')
     
+    if request.user.is_authenticated:
+        customer = Customer.objects.filter(user=request.user).first()
+        product_cart= OrderCart.objects.filter(customer=customer, product=product, is_active=True, is_order=False).first()
+        
+        if product_cart:
+            product.product_cart = product_cart
+    
 
     context = {
         'product': product,
@@ -390,4 +398,77 @@ def add_or_update_cart(request):
 
 @login_required
 def cart(request):
-    return render(request, 'website/cart/cart.html')    
+
+    customer= Customer.objects.filter(user=request.user).first()
+    context= {
+        'customer': customer,
+
+    }
+
+    return render(request, 'website/cart/cart.html',context)    
+
+@login_required
+def checkout(request):
+
+    amount_summary = cart_amount_summary(request)
+    grand_total = amount_summary.get('grand_total', 0)
+
+    if grand_total < 1:
+        messages.error(request, "Your cart is empty. Please add items to your cart before proceeding to checkout.")
+        return redirect('cart')
+    
+    if request.method == 'POST':
+
+        with transaction.atomic():
+
+            billing_address = request.POST.get('billing_address')
+            customer= Customer.objects.filter(user=request.user).first()
+
+            if not billing_address:
+                messages.error(request, "Billing address is required.")
+                return redirect('checkout')
+            
+            cart_items = OrderCart.objects.filter(customer=customer, is_active=True, is_order=False)
+
+            if len(cart_items) < 1:
+                messages.error(request, "Your cart is empty. Please add items to your cart before proceeding to checkout.")
+                return redirect('cart')
+            else:
+
+                order_obj= Order.objects.create(
+                    customer=customer,
+                    billing_address=billing_address,
+                    
+                )
+
+                order_amount, shipping_charge, discount, coupon_discount, vat_amount, tax_amount = 0, 0, 0, 0, 0, 0
+
+                for cart_item in cart_items:
+                    order_amount += cart_item.total_amount
+
+                    OrderDetail.objects.create(
+                        order=order_obj,
+                        product=cart_item.product,
+                        quantity=cart_item.quantity,
+                        unit_price=cart_item.product.price,
+                        total_price=cart_item.total_amount
+                    )
+
+                    grand_total = (order_amount + shipping_charge + vat_amount + tax_amount) - (discount + coupon_discount)
+
+                    order_obj.order_amount = order_amount
+                    order_obj.shipping_charge = shipping_charge
+                    order_obj.discount = discount
+                    order_obj.coupon_discount = coupon_discount
+                    order_obj.vat_amount = vat_amount
+                    order_obj.tax_amount = tax_amount
+                    order_obj.due_amount = grand_total
+                    order_obj.grand_total = grand_total
+                    order_obj.save()
+
+                    messages.success(request, "Order placed successfully.")
+
+                    return redirect('home')
+           
+       
+

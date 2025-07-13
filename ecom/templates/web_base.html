@@ -122,19 +122,19 @@
                                                     <p>{{ cart.product.product_name }}</p>
                                                     {% comment %} <p><span class="opacity">True Vintage</span></p> {% endcomment %}
                                                     <div class="pocket-product-qty">
-                                                        <button type="button" id="decrement" class="decrement"><img src="{% static 'images/icons/minus.svg' %}" alt="-"></button>
+                                                        <button type="button" id="decrement" class="decrement"><img src="{% static 'website/images/icons/minus.svg' %}" alt="-"></button>
                                                         <input type="number" id="cart_qty" class="cart_qty cart_qty__{{ cart.product.id }}" min="0" max="50" data-product-id="{{ cart.product.id }}" value="{{ cart.quantity }}">
-                                                        <button type="button" id="increment" class="increment"><img src="{% static 'images/icons/plus.svg' %}" alt="+"></button>
+                                                        <button type="button" id="increment" class="increment"><img src="{% static 'website/images/icons/plus.svg' %}" alt="+"></button>
                                                     </div>
                                                 </div>
                                             </div>
                                         </td>
-                                       <td with="100" class="text-center"><span class="total_price__{{ cart.product.id }}">Request for Price</span></td>
+                                       <td with="100" class="text-center"><span class="total_price__{{ cart.product.id }}">{{cart.total_amount|default:0|floatformat:2}}</span></td>
                                     </tr>
                                 {% endfor %}
                             </table>
                         </div>
-                        {% comment %} <div class="pocket-bottom">
+                         <div class="pocket-bottom">
                             <div class="pocket-item-info">
                                 <div class="complete_order">
                                     <a class="fico-btn" href="{% url 'cart' %}">COMPLETE YOUR ORDER </a>
@@ -143,7 +143,7 @@
                                     <a href="{% url 'cart' %}">View your basket </a>
                                 </div>
                             </div>
-                        </div> {% endcomment %}
+                        </div> 
                     </div>
                 </div>
             </div>
