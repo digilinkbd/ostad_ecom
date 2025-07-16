@@ -38,7 +38,7 @@ deactivate () {
 # unset irrelevant variables
 deactivate nondestructive
 
-VIRTUAL_ENV="E:\Ostad\4th Batch\ecom\venv"
+VIRTUAL_ENV="D:\Ostad\ecom_live\ostad_ecom\venv"
 export VIRTUAL_ENV
 
 _OLD_VIRTUAL_PATH="$PATH"

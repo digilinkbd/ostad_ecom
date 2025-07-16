@@ -11,11 +11,14 @@ from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.contrib import messages
 from ecomapp.common_func import checkUserPermission
 from django.http import JsonResponse
+from .views_payment import create_payment_request
 from ecomapp.models import (
-     MenuList,ProductMainCategory,Product,ProductSubCategory, Customer,OrderCart,Order,OrderDetail
+     MenuList,ProductMainCategory,Product,ProductSubCategory, Customer,OrderCart,Order,OrderDetail,EmailOTP
    
 )
 from django.db import transaction
+
+from ecomapp.utils import generate_otp
 
 # Create your views here.
 # Create your views here.
@@ -277,17 +280,11 @@ def register(request):
             return render(request, 'website/user/register.html', {'error': 'Username already taken'})
         
         user = User.objects.create_user(username=username, email=email, password=password)
-        Customer.objects.create(user=user, phone=phone, date_of_birth=dob)
+        Customer.objects.create(user=user, phone=phone, date_of_birth=dob, is_active=False)
 
-        messages.success(request, "Logged in successfully!")
+        generate_otp(email)
 
-        next_url = request.GET.get('next')
-        if next_url:
-            next_url = next_url.strip()
-        else:
-            next_url = "home"
-
-        return redirect(next_url)
+        return redirect(f'/backend/verify-otp/?email={email}')
 
     return render(request, 'website/user/register.html')
 
@@ -468,7 +465,69 @@ def checkout(request):
 
                     messages.success(request, "Order placed successfully.")
 
+                    #print(f"Order Amount: {order_amount}, Shipping Charge: {shipping_charge}, Discount: {discount}, Coupon Discount: {coupon_discount}, VAT Amount: {vat_amount}, Tax Amount: {tax_amount}, Grand Total: {grand_total}")
+
+                    response_data, response_status = create_payment_request(request, order_obj.id)
+                    print(response_data)
+                    print(response_status)
+
+                    
+
+                    if response_data['status'] == "SUCCESS":
+                        for cart_item in cart_items:
+                            cart_item.is_order = True
+                            cart_item.save()
+
+                        return redirect(response_data['GatewayPageURL'])
+                    elif "error_message" in response_data:
+                        messages.error(request, response_data['error_message'])
+                    else:
+                        messages.error(request, 'Failed to payment.')
+
+                    
+
                     return redirect('home')
+
+                        
+                # Clear the cart after successful order placement
+
+#OTP Verification
+
+def request_otp_view(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        generate_otp(email)
+        return redirect(f'/backend/verify-otp/?email={email}')
+    
+
+
+def verify_otp_view(request):
+    email = request.GET.get('email')
+
+    if request.method == 'POST':
+        otp = request.POST.get('otp')
+        otp_obj = EmailOTP.objects.filter(email=email, code=otp).order_by('-created_at').first()
+
+       
+
+        if otp_obj and not otp_obj.is_expired():
+            user = User.objects.filter(email=email).first()
+            if not user:
+                messages.error(request, "User not found. Please register first.")
+                return redirect('register')
+            customer = Customer.objects.filter(user=user).first()
+            if customer:
+                customer.is_active = True
+                customer.save()
+                messages.success(request, "OTP verified successfully. You can now log in.")
+            else:
+                messages.error(request, "Customer not found. Please contact support.")
+            
+            return redirect('home')
+        else:
+            messages.error(request, "Invalid or expired OTP.")
+
+    return render(request, 'website/user/verify_otp.html', {'email': email})      
            
        
 

@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from django.utils.text import slugify
 import datetime
+from django.utils import timezone
 # Create your models here.
 class MenuList(models.Model):
     module_name        = models.CharField(max_length=100, db_index=True)
@@ -151,6 +152,7 @@ class Customer(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     phone = models.CharField(max_length=15)
     date_of_birth = models.DateField(null=True, blank=True)
+    is_active = models.BooleanField(default=False)
 
     def __str__(self):
         return self.user.username
@@ -250,3 +252,46 @@ class OrderDetail(models.Model):
 
     class Meta:
         db_table = 'order_details'
+
+class OnlinePaymentRequest(models.Model):
+    order = models.ForeignKey(Order, related_name='order_payment_requests', on_delete=models.CASCADE)
+    transaction_id = models.CharField(max_length=100, blank=True, null=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    payment_status_list = [('Pending', 'Pending'), ('Paid', 'Paid'), ('Cancelled', 'Cancelled'), ('Failed', 'Failed')]
+    payment_status = models.CharField(max_length=15, choices=payment_status_list, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='payment_request_created_by')
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "online_payment_request"
+
+class OrderPayment(models.Model):
+    order = models.ForeignKey(Order, related_name='order_payments', on_delete=models.CASCADE)
+    payment_method = models.CharField(max_length=50, blank=True, null=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, default=0.0)
+    transaction_id = models.CharField(max_length=50, blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return str(self.order.order_number)+" ("+str(self.payment_method)+" - "+str(self.amount)+")"
+
+    class Meta:
+        db_table = 'order_payments'
+
+#Email OTP Verification
+
+class EmailOTP(models.Model):
+    email = models.EmailField()
+    code = models.CharField(max_length=6)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+
+    def is_expired(self):
+        return timezone.now() > self.created_at + timezone.timedelta(minutes=60)
+
+    def __str__(self):
+        return f"{self.email} - {self.code}"
+ 

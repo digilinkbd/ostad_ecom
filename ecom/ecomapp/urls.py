@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views
+from . import views,views_payment
 
 
 urlpatterns = [
@@ -22,6 +22,8 @@ urlpatterns = [
     path('login/', views.login_view, name='user_login'),
     path('register/', views.register, name='register'),
     path('logout/', views.user_logout, name='user_logout'),
+     path('request-otp/', views.request_otp_view, name='request_otp'),
+      path('verify-otp/', views.verify_otp_view, name='verify_otp'),
 
     #ajax
 
@@ -29,4 +31,12 @@ urlpatterns = [
 
     path('cart/', views.cart, name='cart'),
     path('checkout/', views.checkout, name='checkout'),
+
+    #Payment
+
+    path('payment/success/<str:str_data>/', views_payment.payment_complete, name='payment_complete'),
+    path('payment/cancel/<str:str_data>/', views_payment.payment_cancel, name='payment_cancel'),
+    path('payment/failed/<str:str_data>/', views_payment.payment_failed, name='payment_failed'),
+    path('payment/check/<str:str_data>/', views_payment.payment_check, name="payment_check"),
+    
 ]

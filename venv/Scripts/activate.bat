@@ -8,7 +8,7 @@ if defined _OLD_CODEPAGE (
     "%SystemRoot%\System32\chcp.com" 65001 > nul
 )
 
-set VIRTUAL_ENV=E:\Ostad\4th Batch\ecom\venv
+set VIRTUAL_ENV=D:\Ostad\ecom_live\ostad_ecom\venv
 
 if not defined PROMPT set PROMPT=$P$G
 
